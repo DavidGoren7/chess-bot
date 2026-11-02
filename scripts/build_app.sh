@@ -1,6 +1,6 @@
 #!/bin/zsh
 # Builds dist/Chess Bot.app, a double-click Mac app.
-# macOS treats each new build as a new app, so permissions need granting again.
+# macOS ties permissions to one exact build, so each new build must be granted again.
 set -e
 cd "$(dirname "$0")/.."
 
@@ -17,3 +17,7 @@ cd "$(dirname "$0")/.."
   run_app.py
 
 echo "Built: dist/Chess Bot.app"
+echo "If you've run an earlier build, clear its permissions before opening this one:"
+echo "  tccutil reset ScreenCapture com.chessbot.app"
+echo "  tccutil reset PostEvent com.chessbot.app"
+echo "  tccutil reset Accessibility com.chessbot.app"

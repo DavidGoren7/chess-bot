@@ -29,7 +29,19 @@ That creates `dist/Chess Bot.app`, which you can double-click or drag into Appli
 - **Screen Recording**, so it can see the board
 - **Accessibility**, so it can move the mouse
 
-Each new build counts as a new app to macOS, so you'll need to turn these on again after rebuilding.
+Each new build counts as a new app to macOS. After rebuilding, the old switches can still look on but won't work, and turning them off and on again doesn't help. Clear them first, then open the app and turn them on again:
+
+```bash
+tccutil reset ScreenCapture com.chessbot.app
+```
+
+```bash
+tccutil reset PostEvent com.chessbot.app
+```
+
+```bash
+tccutil reset Accessibility com.chessbot.app
+```
 
 ## Playing
 
@@ -47,7 +59,9 @@ With the default setting, the bot plays whichever colour is at the bottom of the
 2. **Tilt the board flat:** drag downward from the wood frame near a bottom corner, until it stops changing. The bot can't find a steeply tilted board by itself.
 3. Keep the Game Log panel closed, or open it before pressing Play. Opening it mid-game shrinks the board.
 
-**The bot plays White and you play Black here.** In a two-human game, Chess spins the board 180° after every move so the next player faces it. The bot waits for the board to spin back after your move, then reads your move from there, which only works if it saw the board from White's side first.
+To watch it play Chess's own computer, choose **Human vs. Computer** instead. The bot plays White and the board stays still.
+
+**In Human vs. Human, the bot plays White and you play Black.** In a two-human game, Chess spins the board 180° after every move so the next player faces it. The bot waits for the board to spin back after your move, then reads your move from there, which only works if it saw the board from White's side first.
 
 If the game ends on your move, the bot may not notice, so press Stop.
 
@@ -73,6 +87,7 @@ Your bots, settings and any saved board position live in `~/Library/Application 
 - The bot borrows your mouse for a moment on its turn. Leave the mouse alone while it moves.
 - Don't move, resize or cover the board during a game. If you do, press Stop and start again.
 - It doesn't read the clock. It takes the **Time per move** you set, so lower that for fast games.
+- On a tilted 3D board it can't tell promoted pieces apart, so it assumes a queen. If your opponent underpromotes there and keeps the piece, it may lose track of the game. Press Stop if that happens.
 - If the board changes in a way no legal move explains, it refuses to click and tells you.
 - It has to see a game from the starting position, because it follows the moves rather than recognising every piece. To join a game already in progress, paste the position as FEN and choose a side, with the bot's side at the bottom.
 - If it can't find the board by itself, press **Show Me Where the Board Is** and hold the mouse over each corner as it asks.

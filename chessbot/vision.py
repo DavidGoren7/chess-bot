@@ -29,8 +29,10 @@ TURNED_MIN_CELLS = 20  # this many changed squares means the whole board moved
 
 EMPTY_MAX = 0.06  # an empty square has almost no pixels off its background
 OCCUPIED_MIN = 0.10
+PROMOTION_MARGIN = 1.25  # how much better another piece must fit before doubting a queen
 
-STABLE_DIFFERENCE = 1.5
+SETTLE_SECONDS = 0.4
+SETTLING_CHANGE = 0.02  # share of any one cell that can differ on a still board
 POLL_SECONDS = 0.12
 
 
@@ -136,7 +138,9 @@ def learn_pieces(frame, orientation):
 def identify_promotion(frame, cell, color, templates):
     """Which piece did a pawn become? Compares the promotion square against the
     learned pieces, looking only at piece pixels since the learned piece may
-    have stood on the other square colour. Queen if there's nothing to compare."""
+    have stood on the other square colour. Nearly every promotion is a queen, so
+    it stays one if there's nothing to compare or the fit is too close to call,
+    as it is on a tilted 3D board seen almost from above."""
     if not templates:
         return chess.QUEEN
     observed = _cells(frame)[cell]
@@ -148,7 +152,8 @@ def identify_promotion(frame, cell, color, templates):
         either = shape | observed_shape
         return np.abs(observed - brightness)[either].mean() if either.any() else 0.0
 
-    return min((chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT), key=mismatch)
+    best = min((chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT), key=mismatch)
+    return best if mismatch(chess.QUEEN) >= mismatch(best) * PROMOTION_MARGIN else chess.QUEEN
 
 
 def changed_cells(before, after, orientation):
@@ -260,14 +265,22 @@ class BoardView:
         return float(x), float(y)
 
     def stable_frame(self, timeout=5.0):
-        """Wait for animations to finish. None if the picture never settles."""
+        """Wait for animations to finish. None if the picture never settles.
+
+        A slowly sliding piece barely changes between two polls, so each frame
+        is compared with the start of the still period, not the one before it.
+        """
         deadline = time.monotonic() + timeout
-        previous = self.frame()
+        still = self.frame()
+        still_since = time.monotonic()
         while time.monotonic() < deadline:
             mouse.check_stop()
             time.sleep(POLL_SECONDS)
             current = self.frame()
-            if cv2.absdiff(previous, current).mean() < STABLE_DIFFERENCE:
+            now = time.monotonic()
+            if square_changes(still, current).max() >= SETTLING_CHANGE:
+                still = current
+                still_since = now
+            elif now - still_since >= SETTLE_SECONDS:
                 return current
-            previous = current
         return None

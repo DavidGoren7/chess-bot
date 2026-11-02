@@ -206,6 +206,38 @@ def test_identifies_underpromotion():
     assert resolved.promotion == chess.KNIGHT
 
 
+def test_unclear_promotion_on_3d_board_stays_a_queen():
+    # A real black bishop on c1 of the Mac board, too round to tell from a rook.
+    corners, _ = find_board(load("mac_start_flat"))
+    templates = vision.learn_pieces(vision.warp(load("mac_start_flat"), corners), WHITE_BOTTOM)
+    frame = load("mac_promoted_bishop")
+    assert vision.identify_promotion(frame, (7, 2), chess.BLACK, templates) == chess.QUEEN
+
+
+class SlidingView(vision.BoardView):
+    """Shows a piece gliding across the board, then coming to rest."""
+
+    def __init__(self, frames):
+        self.frames = list(frames)
+
+    def frame(self):
+        return self.frames.pop(0) if len(self.frames) > 1 else self.frames[0]
+
+
+def test_slow_slide_is_not_a_settled_board(monkeypatch):
+    monkeypatch.setattr(vision, "POLL_SECONDS", 0.005)
+    monkeypatch.setattr(vision, "SETTLE_SECONDS", 0.05)
+    empty = flat(chess.Board("8/8/8/8/8/8/8/8 w - - 0 1"))
+    frames = []
+    for y in range(40, 240, 2):
+        frame = empty.copy()
+        cv2.circle(frame, (300, y), 22, (40, 40, 40), -1)
+        frames.append(frame)
+
+    settled = SlidingView(frames).stable_frame()
+    assert np.array_equal(settled, frames[-1])
+
+
 # The whole game loop, with a scripted screen in place of the real one.
 class ScriptedView:
     def __init__(self, board, opponent_moves):

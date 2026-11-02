@@ -204,7 +204,8 @@ class App:
         ttk.Label(
             self.permission_box,
             text="Chess Bot needs your OK before it can see the board and move the mouse. "
-            "Turn it on in each list below, then quit and reopen Chess Bot.",
+            "Turn it on in each list below, then quit and reopen Chess Bot. If it's "
+            "already on, select it, press the − button, and add this copy again.",
             wraplength=310,
         ).pack(fill="x")
         for name in missing:

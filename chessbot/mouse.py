@@ -1,5 +1,6 @@
 """Mouse control through Quartz events. All coordinates are screen points."""
 
+import ctypes
 import threading
 import time
 
@@ -10,7 +11,7 @@ STOP_CORNER_SIZE = 5
 STEP_DELAY = 0.04
 DRAG_STEPS = 12
 NORMAL_WINDOW_LAYER = 0
-
+APPLICATION_SERVICES = "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices"
 
 _stop_pressed = threading.Event()
 
@@ -20,7 +21,11 @@ class StopRequested(Exception):
 
 
 def has_accessibility():
-    return bool(Quartz.CGPreflightPostEventAccess())
+    """The Accessibility switch and macOS's narrower posting permission are stored
+    apart, and either one lets us move the mouse."""
+    is_trusted = ctypes.CDLL(APPLICATION_SERVICES).AXIsProcessTrusted
+    is_trusted.restype = ctypes.c_bool
+    return bool(Quartz.CGPreflightPostEventAccess()) or is_trusted()
 
 
 def request_accessibility():
