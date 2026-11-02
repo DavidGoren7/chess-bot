@@ -1,0 +1,14 @@
+# Environment and build output
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+build/
+dist/
+*.spec
+
+# Stockfish is 105 MB, over GitHub's 100 MB file limit. Download it separately.
+engines/
+
+# Real screenshots of the Mac Chess app: Apple's artwork, and your name in the title bar.
+tests/fixtures/
